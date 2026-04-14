@@ -73,15 +73,9 @@ pytest
 
 # 🎵 Taste Tuner
 
-<!--
-INSTRUCTIONS:
-- This is a blank portfolio template.
-- Do not leave placeholder text in your final version.
-- Keep writing concise, specific, and evidence-based.
--->
+## Summary
 
-
-
+Taste Tuner is a music recommender that ranks songs from a small catalog using user preferences for genre, mood, and target energy. It separates ranking scores from confidence scores, so high-ranked recommendations can be revealed as uncertain if the system doesn't trust them. The confidence score detects when context is missing or when the recommendation is based on weak matches.
 
 ---
 
@@ -89,42 +83,44 @@ INSTRUCTIONS:
 
 ### System Diagram (Mermaid.js)
 
-<!--
-INSTRUCTIONS:
-- Add a short Mermaid diagram here.
-- Must include: main components (retriever/agent/evaluator/tester), data flow (input -> process -> output), and where humans/testing validate results.
-- Keep diagram easy to read (5-8 nodes is enough).
--->
-
 <img src="/assets/image.png"/>
 
 ### Short Explanation
 
-<!--
-INSTRUCTIONS:
-- Explain the diagram in 3-5 sentences.
-- Describe input, processing, output, testing, and human-in-the-loop checks.
--->
+The system takes user preferences and runs them through a scoring algorithm that ranks all songs. Each song gets both a ranking score and a confidence score. The confidence score is lower when user input is invalid or when matches are weak. Testing uses 5 edge-case profiles to stress-test the system. Results show the system isn't perfect, especially with incomplete input, but it's honest about what it doesn't know.
 
 
 ---
 
 ## Setup Instructions
 
-<!--
-INSTRUCTIONS:
-- Provide step-by-step directions to run your code.
-- Include environment setup, dependency install, run command, and test command.
-- Keep commands copy-paste ready.
--->
-
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
-4. [Step 4]
+1. Clone the repository and navigate to the directory.
+2. Create and activate a virtual environment (recommended).
 
 ```bash
-# Add setup and run commands here
+python -m venv .venv
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+# macOS/Linux
+source .venv/bin/activate
+```
+
+3. Install dependencies.
+
+```bash
+pip install -r requirements.txt
+```
+
+4. Run the recommender with confidence scores and test summary.
+
+```bash
+python .\src\main.py
+```
+
+5. Run tests to verify scoring and confidence behavior.
+
+```bash
+pytest -v
 ```
 
 ---
@@ -138,29 +134,34 @@ INSTRUCTIONS:
 - Use real outputs from your current system, not hypothetical text.
 -->
 
-### Example 1
+### Example 1: Strong Match
+**Input:** `{"genre": "pop", "mood": "happy", "energy": 0.8}`
 
-<!--
-INSTRUCTIONS:
-- Input:
-- Output:
--->
+**Output:**
+```
+Sunrise City - Score: 3.96, Confidence: 0.95
+Because: genre match (typo-tolerant)! (+1.0); mood match (typo-tolerant)! (+1.0); energy similarity (+1.96)
+```
 
-### Example 2
+### Example 2: Typo Tolerance Works
+**Input:** `{"genre": "lo-fi", "mood": "chill", "energy": 0.30}`
 
-<!--
-INSTRUCTIONS:
-- Input:
-- Output:
--->
+**Output:**
+```
+Library Rain - Score: 3.90, Confidence: 0.90
+Because: genre match (typo-tolerant)! (+1.0); mood match (typo-tolerant)! (+1.0); energy similarity (+1.90)
+```
+Note: "lo-fi" was matched against "lofi" in the dataset using similarity detection.
 
-### Example 3
+### Example 3: Invalid Input Reduces Confidence
+**Input:** `{"genre": "rock", "mood": "intense", "energy": 1.8}` (energy out of range)
 
-<!--
-INSTRUCTIONS:
-- Input:
-- Output:
--->
+**Output:**
+```
+Storm Runner - Score: 3.82, Confidence: 0.72
+Because: genre match (typo-tolerant)! (+1.0); mood match (typo-tolerant)! (+1.0); energy similarity (+1.82); user energy normalized from 1.80 to 1.00
+```
+Note: Confidence is lower even though rank is high, signaling the recommendation is risky.
 
 ---
 
@@ -173,29 +174,20 @@ INSTRUCTIONS:
 - Good answers include at least 2-3 concrete decisions.
 -->
 
-### Decision 1
+### Decision 1: Separate Ranking Score from Confidence Score
+**Why:** A single score hides the system's uncertainty. High ranking could mean a genuinely good match or just lucky alignment on one factor. Splitting them makes uncertainty visible.
 
-<!--
-INSTRUCTIONS:
-- Why this decision:
-- Trade-off:
--->
+**Trade-off:** More complex API. But this forces code that uses the recommender to think about certainty, not just ranking.
 
-### Decision 2
+### Decision 2: Typo-Tolerant Matching
+**Why:** Real users mistype. The system detects similarity instead of demanding exact matches, so "lo-fi" and "lofi" are treated as the same.
 
-<!--
-INSTRUCTIONS:
-- Why this decision:
-- Trade-off:
--->
+**Trade-off:** Occasional false positives are possible. Accept noise to be forgiving to users.
 
-### Decision 3
+### Decision 3: Confidence Penalty for Invalid Input
+**Why:** Out-of-range energy or missing context indicates incomplete user data. The system should signal it's less sure rather than pretending the recommendation is solid.
 
-<!--
-INSTRUCTIONS:
-- Why this decision:
-- Trade-off:
--->
+**Trade-off:** Recommendations with invalid input still get returned. Current approach is more forgiving but requires users to read confidence.
 
 ---
 
@@ -210,25 +202,15 @@ INSTRUCTIONS:
 
 ### What Worked
 
-<!--
-INSTRUCTIONS:
-- List validated behaviors.
--->
+Data loading, scoring logic, typo-tolerant matching, energy normalization, and confidence scoring all function as intended. Tests pass for strong matches (confidence 0.95+), weak matches (confidence near 0.0), and the critical case of missing context (confidence drops significantly). The system correctly penalizes invalid input without crashing.
 
 ### What Did Not Work
 
-<!--
-INSTRUCTIONS:
-- Note failures, bugs, or limitations encountered.
-- Briefly explain how you addressed them (or why unresolved).
--->
+Initial tests assumed an OOP API but the codebase uses functional dictionaries; resolved by rewriting tests to match the implementation. Early typo logic only did exact matching; upgraded to SequenceMatcher. Confidence wasn't displayed in the CLI at first. These weren't critical failures—they were catching misalignments between intended design and actual code.
 
 ### What I Learned
 
-<!--
-INSTRUCTIONS:
-- Capture practical lessons about reliability/testing.
--->
+Reliability testing is most valuable when it catches the system struggling. The test suite found that confidence averages 0.53 on edge cases, which isn't a failure. It's evidence the system is working correctly by being honest. The most helpful insight was normalizing user preferences and detecting similarity to handle typos, but this system is not perfect. It's serviceable for most cases, which is exactly what you want from a small simulation: good enough to prove the concept, transparent about limitations.
 
 ---
 
