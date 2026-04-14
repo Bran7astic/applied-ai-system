@@ -80,17 +80,6 @@ INSTRUCTIONS:
 - Keep writing concise, specific, and evidence-based.
 -->
 
-In this project you will build and explain a small music recommender system.
-
-Your goal is to:
-
-- Represent songs and a user "taste profile" as data
-- Design a scoring rule that turns that data into recommendations
-- Evaluate what your system gets right and wrong
-- Reflect on how this mirrors real world AI recommenders
-
-Replace this paragraph with your own summary of what your version does.
--->
 
 
 
@@ -116,6 +105,7 @@ INSTRUCTIONS:
 - Explain the diagram in 3-5 sentences.
 - Describe input, processing, output, testing, and human-in-the-loop checks.
 -->
+
 
 ---
 
