@@ -241,3 +241,5 @@ INSTRUCTIONS:
 - Keep tone professional and portfolio-ready.
 -->
 
+The limitations of the AI include its low confidence in handling typos, which it attempts to handle by detecting similarity, but isn't always accurate. It's likely that the AI can be misused, as a prominent bias is that it reccomend songs that largely match exact preferences and never exposes users to new genres/moods. This can be addressed by adding a diversity constraint, which also randomly samples diverse songs. I was surprised at the AI's effectiveness in generating test cases, although there were some test cases it designed which failed. The most helpful suggestion the AI gave was to normalize user preferences with known genres and detect similarity to handle typos, but this system is not perfect and does not always exhibit accurate reccomendations. However, it's serviceable for the most part
+

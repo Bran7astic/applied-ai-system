@@ -95,7 +95,44 @@ def load_songs(csv_path: str) -> List[Dict]:
 
     return songs
 
-def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
+def compute_confidence(user_prefs: Dict, song: Dict, score: float) -> float:
+    """
+    Compute confidence score (0.0 to 1.0) based on match strength and input validity.
+    
+    Confidence factors:
+    - Genre and mood matches (categorical certainty)
+    - Energy similarity (numeric closeness)
+    - Input completeness and validity
+    """
+    user_genre = str(user_prefs.get("genre", "")).strip()
+    user_mood = str(user_prefs.get("mood", "")).strip()
+    raw_target_energy = float(user_prefs.get("energy", 0.0))
+    target_energy = _normalize_energy(raw_target_energy)
+
+    song_genre = str(song.get("genre", "")).strip()
+    song_mood = str(song.get("mood", "")).strip()
+    song_energy = float(song.get("energy", 0.0))
+
+    # Category match confidence (binary): 0.3 each if matched
+    category_confidence = 0.0
+    if user_genre and _is_typo_tolerant_match(user_genre, song_genre):
+        category_confidence += 0.3
+    if user_mood and _is_typo_tolerant_match(user_mood, song_mood):
+        category_confidence += 0.3
+
+    # Energy similarity confidence: 0.4 based on closeness
+    energy_similarity = max(0.0, 1.0 - abs(target_energy - song_energy))
+    energy_confidence = energy_similarity * 0.4
+
+    # Input validity confidence: 0.0 if input was invalid/out-of-range, 0.0 otherwise
+    input_validity = 1.0 if raw_target_energy == target_energy else 0.85  # penalty for normalization
+
+    # Combined confidence clamped to [0.0, 1.0]
+    confidence = (category_confidence + energy_confidence) * input_validity
+    return min(1.0, max(0.0, confidence))
+
+
+def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str], float]:
     """Score one song using genre, mood, and energy similarity against user preferences."""
     genre_weight = 1.0
     mood_weight = 1.0
@@ -132,16 +169,17 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
     if target_energy != raw_target_energy:
         reasons.append(f"user energy normalized from {raw_target_energy:.2f} to {target_energy:.2f}")
 
-    return score, reasons
+    confidence = compute_confidence(user_prefs, song, score)
+    return score, reasons, confidence
 
-def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
-    """Rank songs by score and return the top k recommendations with explanations."""
-    scored_songs: List[Tuple[Dict, float, str]] = []
+def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str, float]]:
+    """Rank songs by score and return the top k recommendations with explanations and confidence scores."""
+    scored_songs: List[Tuple[Dict, float, str, float]] = []
 
     for song in songs:
-        score, reasons = score_song(user_prefs, song)
+        score, reasons, confidence = score_song(user_prefs, song)
         explanation = "; ".join(reasons)
-        scored_songs.append((song, score, explanation))
+        scored_songs.append((song, score, explanation, confidence))
 
     scored_songs.sort(key=lambda item: item[1], reverse=True)
     return scored_songs[:k]
