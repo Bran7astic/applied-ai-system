@@ -77,6 +77,8 @@ pytest
 
 Taste Tuner is a music recommender that ranks songs from a small catalog using user preferences for genre, mood, and target energy. It separates ranking scores from confidence scores, so high-ranked recommendations can be revealed as uncertain if the system doesn't trust them. The confidence score detects when context is missing or when the recommendation is based on weak matches.
 
+<img src="/assets//preview.gif">
+
 ---
 
 ## Architecture Overview
